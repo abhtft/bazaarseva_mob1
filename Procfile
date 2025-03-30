@@ -1,1 +1,1 @@
-web: gunicorn "kirana_suvidha.application:create_app()" 
+web: gunicorn kirana_suvidha.application:create_app 
