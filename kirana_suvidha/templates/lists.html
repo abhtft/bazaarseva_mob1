@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Shopping Lists</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .flash-messages {
+            margin: 20px 0;
+        }
+        .alert {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+        }
+        .alert-success {
+            background-color: #dff0d8;
+            color: #3c763d;
+        }
+        .alert-error {
+            background-color: #f2dede;
+            color: #a94442;
+        }
+        .back-button {
+            margin: 20px 0;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            display: inline-block;
+        }
+        .back-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <h1>Submitted Shopping Lists</h1>
+    
+    <a href="{{ url_for('index') }}" class="back-button">Back to Form</a>
+    
+    {% if shopping_lists %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Customer Name</th>
+                    <th>Favorite Shop</th>
+                    <th>Submission Time</th>
+                    <th>Items</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for list in shopping_lists %}
+                    <tr>
+                        <td>{{ list.get('customer_name', '') }}</td>
+                        <td>{{ list.get('favorite_shop', '') }}</td>
+                        <td>{{ list.get('submission_datetime', '').strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                        <td>
+                            <ul>
+                            {% for item in list.get('items', []) %}
+                                <li>
+                                    {{ item.get('item', '') }}
+                                    {% if item.get('quantity') %} - {{ item.get('quantity') }}{% endif %}
+                                    {% if item.get('unit') %} {{ item.get('unit') }}{% endif %}
+                                    {% if item.get('brand') %} ({{ item.get('brand') }}){% endif %}
+                                    {% if item.get('priority') %} [{{ item.get('priority') }}]{% endif %}
+                                </li>
+                            {% endfor %}
+                            </ul>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No shopping lists found.</p>
+    {% endif %}
+</body>
+</html> 

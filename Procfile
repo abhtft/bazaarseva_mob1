@@ -1,0 +1,1 @@
+web: gunicorn kirana_suvidha.application:create_app() 

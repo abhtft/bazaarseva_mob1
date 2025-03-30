@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Items</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f9f9f9; margin: 0; padding: 20px; }
+        .table-container { width: 90%; margin: auto; padding: 20px; background: #fff; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
+        th { background-color: #f2f2f2; }
+        img { max-width: 100px; max-height: 100px; }
+        audio { width: 100%; }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+    <div class="table-container">
+        <h1>Items Needed</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>Priority</th>
+                    <th>Item Name</th>
+                    <th>Quantity</th>
+                    <th>Unit</th>
+                    <th>Description Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td>{{ item.priority }}</td>
+                    <td>{{ item.item }}</td>
+                    <td>{{ item.qty }}</td>
+                    <td>{{ item.unit }}</td>
+                    <td>{{ item.description_type }}</td>
+                    <td>
+                        {% if item.description_type == 'text' %}
+                            {{ item.description }}
+                        {% elif item.description_type == 'audio' %}
+                            <audio controls>
+                                <source src="{{ item.description }}" type="audio/mpeg">
+                                Your browser does not support the audio element.
+                            </audio>
+                        {% elif item.description_type == 'image' %}
+                            <img src="{{ item.description }}" alt="Image description">
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <script>
+        // Test if voice recognition is available
+        if (!window.SpeechRecognition && !window.webkitSpeechRecognition) {
+            console.error('Speech recognition not supported');
+            // Disable voice buttons if not supported
+            document.querySelectorAll('.voice-btn').forEach(btn => {
+                btn.style.display = 'none';
+            });
+        }
+
+        // Add this to check if voice input is working
+        document.querySelectorAll('.voice-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                console.log('Voice button clicked for:', button.dataset.field);
+                button.classList.add('listening');
+                // Should see the button turn red and pulse
+                setTimeout(() => button.classList.remove('listening'), 2000);
+            });
+        });
+
+        // Add to your console to test
+        function testVoiceButton() {
+            const btn = document.querySelector('.voice-btn');
+            if (btn) {
+                console.log('Voice button found');
+                btn.click();
+            } else {
+                console.log('Voice button not found');
+            }
+        }
+    </script>
+</body>
+</html> 

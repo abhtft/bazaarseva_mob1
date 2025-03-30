@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kirana Shop</title>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 20px;
+            background-color: #f3f4f6;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+        form {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: center;
+        }
+        th {
+            background-color: #f8f9fa;
+            color: #495057;
+        }
+        button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .delete-icon {
+            color: red;
+            cursor: pointer;
+            font-size: 1.2em;
+        }
+        .customer-name, .favorite-shop {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .customer-name input, .favorite-shop input {
+            padding: 10px;
+            width: 50%;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+        .flash-messages {
+            margin: 20px 0;
+        }
+        .alert {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+        }
+        .alert-success {
+            background-color: #dff0d8;
+            color: #3c763d;
+        }
+        .alert-error {
+            background-color: #f2dede;
+            color: #a94442;
+        }
+        .button-group {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .button-group button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+        
+        button[value="save_only"] {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        button[value="save_and_exit"] {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        button[value="save_and_new"] {
+            background-color: #17a2b8;
+            color: white;
+        }
+        
+        button:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <!-- Add flash messages section -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <h1>Customer Suvidha</h1>
+    
+    <form action="{{ url_for('submit') }}" method="POST" id="shoppingForm">
+        {% if data %}
+        <input type="hidden" name="edit_id" value="{{ data._id }}">
+        {% endif %}
+
+        <div class="customer-name">
+            <label for="customerName">Customer Name: </label>
+            <input type="text" id="customerName" name="customer_name" 
+                   value="{{ data.customer_name if data else '' }}" required>
+        </div>
+        
+        <div class="favorite-shop">
+            <label for="favoriteShop">Favorite Shop: </label>
+            <input type="text" id="favoriteShop" name="favorite_shop" 
+                   value="{{ data.favorite_shop if data else '' }}">
+        </div>
+
+        <table id="itemTable">
+            <thead>
+                <tr>
+                    <th>Index</th>
+                    <th>Priority</th>
+                    <th>Item Name</th>
+                    <th>Brand</th>
+                    <th>Quantity</th>
+                    <th>Unit</th>
+                    <th>Description</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if not data %}
+                <!-- Default empty row for new form -->
+                <tr>
+                    <td>1</td>
+                    <td>
+                        <select name="priority[]">
+                            <option value="low">Low</option>
+                            <option value="high">High</option>
+                        </select>
+                    </td>
+                    <td><input type="text" name="item[]" required></td>
+                    <td><input type="text" name="brand[]"></td>
+                    <td><input type="text" name="qty[]"></td>
+                    <td>
+                        <select name="unit[]">
+                            <option value="kg">kg</option>
+                            <option value="liters">liters</option>
+                            <option value="pieces">pieces</option>
+                        </select>
+                    </td>
+                    <td><input type="text" name="description_text[]"></td>
+                    <td><span class="delete-icon" onclick="deleteRow(this)">&#10060;</span></td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+
+        <button type="button" onclick="addRow()">Add Row</button>
+        <button type="submit">Submit</button>
+    </form>
+
+    <script>
+        {% if data and data.items %}
+            // Clear any existing rows
+            document.querySelector('#itemTable tbody').innerHTML = '';
+            
+            // Add existing items
+            {% for item in data.items %}
+                addRow({
+                    item: '{{ item.item }}',
+                    brand: '{{ item.brand }}',
+                    quantity: '{{ item.quantity }}',
+                    unit: '{{ item.unit }}',
+                    priority: '{{ item.priority }}',
+                    description: '{{ item.description }}'
+                });
+            {% endfor %}
+        {% endif %}
+
+        function addRow(data = null) {
+            const table = document.getElementById('itemTable').getElementsByTagName('tbody')[0];
+            const rowIndex = table.rows.length + 1;
+            const row = table.insertRow();
+            
+            row.innerHTML = `
+                <td>${rowIndex}</td>
+                <td>
+                    <select name="priority[]">
+                        <option value="low" ${data && data.priority === 'low' ? 'selected' : ''}>Low</option>
+                        <option value="high" ${data && data.priority === 'high' ? 'selected' : ''}>High</option>
+                    </select>
+                </td>
+                <td><input type="text" name="item[]" required value="${data ? data.item : ''}"></td>
+                <td><input type="text" name="brand[]" value="${data ? data.brand : ''}"></td>
+                <td><input type="text" name="qty[]" value="${data ? data.quantity : ''}"></td>
+                <td>
+                    <select name="unit[]">
+                        <option value="kg" ${data && data.unit === 'kg' ? 'selected' : ''}>kg</option>
+                        <option value="liters" ${data && data.unit === 'liters' ? 'selected' : ''}>liters</option>
+                        <option value="pieces" ${data && data.unit === 'pieces' ? 'selected' : ''}>pieces</option>
+                    </select>
+                </td>
+                <td><input type="text" name="description_text[]" value="${data ? data.description : ''}"></td>
+                <td><span class="delete-icon" onclick="deleteRow(this)">&#10060;</span></td>
+            `;
+        }
+
+        function deleteRow(icon) {
+            const row = icon.parentElement.parentElement;
+            row.remove();
+            updateIndices();
+        }
+
+        function updateIndices() {
+            const tbody = document.getElementById('itemTable').getElementsByTagName('tbody')[0];
+            const rows = tbody.getElementsByTagName('tr');
+            for (let i = 0; i < rows.length; i++) {
+                rows[i].cells[0].textContent = i + 1;
+            }
+        }
+    </script>
+</body>
+</html> 
